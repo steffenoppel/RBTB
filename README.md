@@ -3,7 +3,7 @@ Analysis of Red-billed Tropicbird tracking data in collaboration with St Helena 
 
 Foraging ecology of tropicbirds breeding in two contrasting marine environments
 
-Ngoné Diop, Laura Zango, Annalea Beard, Cheikh Tidiane Ba1, Papa Ibnou Ndiaye, Leeann Henry, Elizabeth Clingham, Steffen Oppel, Jacob González-Solís
+Ngoné Diop, Laura Zango, Annalea Beard, Cheikh Tidiane Ba, Papa Ibnou Ndiaye, Leeann Henry, Elizabeth Clingham, Steffen Oppel, Jacob González-Solís
 
 
 Two different R files contain code for the following steps:
