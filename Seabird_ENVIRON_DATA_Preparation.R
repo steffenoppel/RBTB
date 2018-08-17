@@ -1,6 +1,7 @@
 ############################################################################################################
-#######  ST HELENA TROPICBIRD MARINE DISTRIBUTION ANALYSIS  ###################################################
+#######  SEABIRD ENVIRONMENTAL DATA PREPARATION FOR TRACKING DATA  #########################################
 ############################################################################################################
+#### based on ST HELENA TROPICBIRD MARINE DISTRIBUTION ANALYSIS
 #### forked from RBTB_EnvData_summary2016.r
 #### REVISED IN JULY 2018 TO INCLUDE ADDITIONAL ENVIRONMENTAL VARIABLES
 #### changed approach to first summarise background environment
@@ -13,6 +14,7 @@
 ### UPDATE 16 JULY 2018: loaded all environmental rasters and added tuna species richness
 ### FINALISED 23 JULY 2018: included newly classified tracking data from Laura
 ### completely overhauled spatial arrangement as many grid cells ended up with NA for some variables
+
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -341,53 +343,6 @@ SENtunaras<- raster(temppix)
 
 #### revised 23 July after Laura sent reclassified tracking data
 
-# ### DATA FROM ST HELENA
-# 
-# setwd("C:\\STEFFEN\\RSPB\\UKOT\\StHelena\\Science\\Birds\\seabirds")
-# RAW<-read.table("RBTB_EnvData_2016.csv", header=T, sep=",")
-# 
-# RBTB1<- RAW %>% filter(individual.taxon.canonical.name=="Phaethon aethereus") %>%
-#   mutate(timestamp=gsub(":00.000",":00",timestamp)) %>%
-#   mutate(DateTime=ymd_hms(timestamp)) %>%
-#   mutate(year=as.numeric(year(DateTime))) %>%
-#   filter(year==2015) %>%
-#   dplyr::select(c(9,18,5,4,10,12:17)) %>%
-#   mutate(loc="StHelena")
-# 
-# names(RBTB1)<-c("ID","Loctime","Latitude","Longitude","Ring_Nr","SSTnight","NPP","Wind_U","CHLA","Wind_V","SST","loc")
-# head(RBTB1)
-# str(RBTB1)
-# 
-# ### DATA FROM SENEGAL
-# 
-# setwd("C:\\STEFFEN\\RSPB\\UKOT\\StHelena\\Science\\Birds\\seabirds")
-# RAW2<-read.table("RBTB2015EnvData_Senegal.csv", header=T, sep=",")
-# names(RAW2)
-# RBTB2<- RAW2 %>% filter(individual.taxon.canonical.name=="Phaethon aethereus") %>%
-#   mutate(timestamp=gsub(":00.000",":00",timestamp)) %>%
-#   mutate(DateTime=ymd_hms(timestamp)) %>%
-#   mutate(year=as.numeric(year(DateTime))) %>%
-#   filter(year==2015) %>%
-#   dplyr::select(c(9,19,5,4,10,12,14,16:18,15)) %>%
-#   mutate(loc="Senegal")
-# 
-# names(RBTB2)<-c("ID","Loctime","Latitude","Longitude","Ring_Nr","SSTnight","NPP","Wind_U","CHLA","Wind_V","SST","loc")
-# head(RBTB2)
-# str(RBTB2)
-# 
-# 
-# ### Combine the two datasets
-# RBTB1$Ring_Nr<-as.character(RBTB1$Ring_Nr)
-# RBTB2$Ring_Nr<-as.character(RBTB2$Ring_Nr)
-# RBTB<-rbind(RBTB1,RBTB2)
-# RBTB$month<-month.abb[month(RBTB$Loctime)]
-# RBTB$month<-ifelse(RBTB$month=="Aug","Sep",RBTB$month)  ## omit the few days at the end of august on St Helena
-# RBTB$month[RBTB$month=="Nov"]<-ifelse(day(RBTB$Loctime[RBTB$month=="Nov"])<15,"Oct","Dec")  ## omit the few days in November on St Helena
-
-
-
-#### COMPLETE REVISED DATA FROM 17 JULY 2018 #################################################
-
 setwd("C:\\STEFFEN\\MANUSCRIPTS\\submitted\\RBTB_StHelena")
 RAW<-read.table("RBTB_tracks_classified_EmBC.csv", header=T, sep=",")
 
@@ -602,105 +557,6 @@ plot(lat~long, BGRD_ENV)
 
 
 
-
-
-
-
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# REMOVED BECAUSE ADDED TO LOOP: ADD STATIC VARIABLES TO ENVIRONMENTAL DATA FRAME FOR SUMMARY
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-unique(BGRD_ENV$Var)
-
-#### ADD THE BATHYMETRY DATA
-out<-as.data.frame(rasterToPoints(SHbathras))
-names(out)<-c("long","lat", "tmp.vec.long")
-out$Var="BATHY"
-out$loc="StHelena"
-out$month="Dec"
-out$date=BGRD_ENV$date[1]
-BGRD_ENV<-rbind(BGRD_ENV,out[,c(1,2,7,5,4,3,6)])
-
-
-out<-as.data.frame(rasterToPoints(SENbathras))
-names(out)<-c("long","lat", "tmp.vec.long")
-out$Var="BATHY"
-out$loc="Senegal"
-out$month="Dec"
-out$date=BGRD_ENV$date[1]
-BGRD_ENV<-rbind(BGRD_ENV,out[,c(1,2,7,5,4,3,6)])
-
-
-#### ADD THE SLOPE DATA
-out<-as.data.frame(rasterToPoints(slopegridSH))
-names(out)<-c("long","lat", "tmp.vec.long")
-out$Var="SLOPE"
-out$loc="StHelena"
-out$month="Dec"
-out$date=BGRD_ENV$date[1]
-BGRD_ENV<-rbind(BGRD_ENV,out[,c(1,2,7,5,4,3,6)])
-
-
-out<-as.data.frame(rasterToPoints(slopegridSEN))
-names(out)<-c("long","lat", "tmp.vec.long")
-out$Var="SLOPE"
-out$loc="Senegal"
-out$month="Dec"
-out$date=BGRD_ENV$date[1]
-BGRD_ENV<-rbind(BGRD_ENV,out[,c(1,2,7,5,4,3,6)])
-
-
-
-#### ADD DISTANCE DATA TO COLONY 
-out<-as.data.frame(rasterToPoints(SHcolras))
-names(out)<-c("long","lat", "tmp.vec.long")
-out$Var="COLONY"
-out$loc="StHelena"
-out$month="Dec"
-out$date=BGRD_ENV$date[1]
-BGRD_ENV<-rbind(BGRD_ENV,out[,c(1,2,7,5,4,3,6)])
-
-
-out<-as.data.frame(rasterToPoints(SENcolras))
-names(out)<-c("long","lat", "tmp.vec.long")
-out$Var="COLONY"
-out$loc="Senegal"
-out$month="Dec"
-out$date=BGRD_ENV$date[1]
-BGRD_ENV<-rbind(BGRD_ENV,out[,c(1,2,7,5,4,3,6)])
-
-
-
-#### ADD DISTANCE DATA TO SEAMOUNT
-out<-as.data.frame(rasterToPoints(SHseamras))
-names(out)<-c("long","lat", "tmp.vec.long")
-out$Var="SEAMOUNT"
-out$loc="StHelena"
-out$month="Dec"
-out$date=BGRD_ENV$date[1]
-BGRD_ENV<-rbind(BGRD_ENV,out[,c(1,2,7,5,4,3,6)])
-
-
-out<-as.data.frame(rasterToPoints(SENseamras))
-names(out)<-c("long","lat", "tmp.vec.long")
-out$Var="SEAMOUNT"
-out$loc="Senegal"
-out$month="Dec"
-out$date=BGRD_ENV$date[1]
-BGRD_ENV<-rbind(BGRD_ENV,out[,c(1,2,7,5,4,3,6)])
-
-
-#### EXTRACT TUNA RICHNESS DATA FROM GLOBAL RASTER
-### raster at different resolution, hence extract function rather than adding raster values
-out<-BGRD_ENV %>% group_by(lat, long, loc) %>%
-	summarise(bullshit=max(tmp.vec.long, na.rm=T)) %>%
- 	mutate(Var="TUNA",month="Dec",tmp.vec.long=0) %>%
-	dplyr::select(long,lat,loc,Var,tmp.vec.long,month)
-out$date<-BGRD_ENV$date[1]
-out<-as.data.frame(out)
-SHSPDF<-SpatialPointsDataFrame(coords=out[,1:2], proj4string=CRS("+proj=longlat + datum=wgs84"), data = out)
-out$tmp.vec.long<-raster::extract(TUNAras,SHSPDF, method='bilinear')
-#str(out)
-BGRD_ENV<-rbind(BGRD_ENV,out[,c(1,2,7,3:6)])
 
 
 
