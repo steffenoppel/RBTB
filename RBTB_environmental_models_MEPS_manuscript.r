@@ -6,7 +6,7 @@
 ## analysis written by steffen.oppel@rspb.org.uk on 9 Jan 2017
 
 ## Manuscript: Foraging ecology of tropicbirds breeding in two contrasting marine environments
-## NgonÈ Diop, Laura Zango, Annalea Beard, Cheikh Tidiane Ba, Papa Ibnou Ndiaye, Leeann Henry, Elizabeth Clingham, Steffen Oppel, Jacob Gonz·lez-SolÌs
+## Ngon√© Diop, Laura Zango, Annalea Beard, Cheikh Tidiane Ba, Papa Ibnou Ndiaye, Leeann Henry, Elizabeth Clingham, Steffen Oppel, Jacob Gonz√°lez-Sol√≠s
 
 ## REVISION TO INCLUDE MORE ENVIRONMENTAL VARIABLES STARTED ON 9 JULY 2018
 ## revision finalised on 17 Aug 2018
