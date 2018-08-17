@@ -1,12 +1,15 @@
 ############################################################################################################
-#######  TROPICBIRD FORAGING ENVIRONMENT COMPARISON ST HELENA - MADELAINE  ###################################################
+#######  TROPICBIRD FORAGING ENVIRONMENT COMPARISON ST HELENA - MADELAINE  #################################
 ############################################################################################################
 
-## collaboration with Jacob Gonzalez Solis, Ngone Diop, Laura Zango and Anneale Beard
+## collaboration with Jacob Gonzalez Solis, Ngone Diop, Laura Zango and Annealea Beard
 ## analysis written by steffen.oppel@rspb.org.uk on 9 Jan 2017
 
-#### REVISION TO INCLUDE MORE ENVIRONMENTAL VARIABLES STARTED ON 9 JULY 2018
+## Manuscript: Foraging ecology of tropicbirds breeding in two contrasting marine environments
+## Ngoné Diop, Laura Zango, Annalea Beard, Cheikh Tidiane Ba, Papa Ibnou Ndiaye, Leeann Henry, Elizabeth Clingham, Steffen Oppel, Jacob González-Solís
 
+## REVISION TO INCLUDE MORE ENVIRONMENTAL VARIABLES STARTED ON 9 JULY 2018
+## revision finalised on 17 Aug 2018
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -18,8 +21,6 @@ require(sp)
 require(rgdal)
 require(rgeos)
 library(randomForest)
-#library(randomForestSRC)     ## tried once on 24 July and immediately crashed R, so gave up
-#library(ggRandomForests)
 library(verification)
 library(tidyr)
 library(tidyverse)
@@ -31,19 +32,21 @@ library(scales)
 source("C:\\STEFFEN\\RSPB\\Statistics\\RF_partial_plot.r")
 setwd("C:\\STEFFEN\\MANUSCRIPTS\\submitted\\RBTB_StHelena")
 
-load("C:\\STEFFEN\\MANUSCRIPTS\\submitted\\RBTB_StHelena\\REV1_env_data_background.RData")
+load("C:\\STEFFEN\\MANUSCRIPTS\\submitted\\RBTB_StHelena\\REV1_env_data_background.RData")  ## this file is created by RBTB_EnvData_data_prep_v4.R
 #load("A:\\MANUSCRIPTS\\submitted\\RBTB_StHelena\\RBTB_environmental_analysis_input.RData")
 
 
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# SUMMARISE AND COMPARE BACKGROUND VS TRACK LOCATIONS 
+# SUMMARISE AND COMPARE BACKGROUND VS TRACK LOCATIONS FOR SIMPLE INTRODUCTORY STATEMENT IN RESULTS SECTION
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## this test provides a very simple t-test of all environmental variables between the tracking locations and the general background
+## these tests are mostly statistically 'significant' due to large sample size
+## magnitude of differences is biologically insignificant
+
 head(RBTB_ENV)
 head(BGRD_ENV)
-
-dim(RBTB_ENV %>% filter(loc=="StHelena") %>% filter(state_EMBC=="ext_search"))
 
 
 ### set up loop over month, loc and variable
@@ -83,20 +86,21 @@ for (l in unique(BGRD_ENV$loc)){
   
 }
 
-
-
 #fwrite(summary_t_test,"Env_data_comparison.csv")
 
 
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# Question 1:  Do environmental conditions differ between foraging and travelling locations 
+# Question 1:  Do environmental conditions differ between foraging and travelling locations?
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## this analysis fits 3 logistic GLMMs to each environmental variable to examine whether there are differences between locations classified as extensive search and travelling
+## this is a univariate analysis that does not consider interactions between variables
+
 
 head(RBTB_ENV)
 
-## SELECT ONLY FORAGING AND COMMUTING LOCATIONS ##
+## SELECT THE DATA FOR THIS QUESTION: ONLY FORAGING AND COMMUTING LOCATIONS ##
 q1df<-RBTB_ENV %>% filter(state_EMBC %in% c("relocation","ext_search")) %>%   ### changed on 24 July 2018 to adjust for new data provided by Laura
   mutate(speed=sqrt(Wind_U^2+Wind_V^2)) %>%
   gather(variable, value, -ID_GPS_deployment, -loc, -DateTime, -Longitude, -Latitude, -Sexe, -Breeding_statut, -state_EMBC, -month) %>%
@@ -110,21 +114,18 @@ head(q1df)
 dim(q1df)
 
 
-## CREATE OUTPUT SUMMARY
+## CREATE OUTPUT SUMMARY FOR PAPER [to be populated in loop below]
 Table3<-q1df %>% group_by(variable,Colony,behav) %>%
   summarise(n=length(value),mean=mean(value), sd=sd(value)) %>%
   mutate(p_var=0,p_int=0,beta=0,se=0,R2=0)
 
 
-
-
-
-
-##### RUN ANALYSIS OVER ALL ENVIRONMENTAL VARIABLES ###########
+## RUN ANALYSIS OVER ALL ENVIRONMENTAL VARIABLES IN A SIMPLE SEQUENTIAL LOOP ##
+## this loop takes ~2-5 minutes on an average laptop
 
 variables<-unique(q1df$variable)
 
-pdf("RBTB_env_histograms_forage_travel.pdf", width=6, height=8)
+#pdf("RBTB_env_histograms_forage_travel.pdf", width=6, height=8)    ## optional creation of histograms to show distribution of variables
 for(v in variables) {
 
 m0<-glmer(forage~Colony+breeding_status+(1|trip_id), data=q1df[q1df$variable==v,], family=binomial)			## no effect of SST
@@ -139,21 +140,21 @@ Table3$beta[Table3$variable==v]<-modout$coefficients[4,1]
 Table3$se[Table3$variable==v]<-modout$coefficients[4,2]
 
 
-# PLOT HISTOGRAM
+# PLOT HISTOGRAM [optional, hence commented out to speed up processing]
 
-histplotV<-q1df %>% filter(variable==v) %>%
-  ggplot() + geom_histogram(aes(x=value, fill=behav), alpha=0.4, position="identity") +
-  facet_wrap("Colony", ncol=1, scales = "fixed")+
-  xlab(v) +
-  theme(panel.background=element_rect(fill="white", colour="black"), 
-        axis.text=element_text(size=16, color="black"),
-        axis.title=element_text(size=18),
-        strip.background=element_rect(fill="white", colour="black"),
-        strip.text.x=element_text(size=18, color="black"), 
-        panel.grid.major = element_blank(), 
-        panel.grid.minor = element_blank(), 
-        panel.border = element_blank())
-print(histplotV)
+# histplotV<-q1df %>% filter(variable==v) %>%
+#   ggplot() + geom_histogram(aes(x=value, fill=behav), alpha=0.4, position="identity") +
+#   facet_wrap("Colony", ncol=1, scales = "fixed")+
+#   xlab(v) +
+#   theme(panel.background=element_rect(fill="white", colour="black"), 
+#         axis.text=element_text(size=16, color="black"),
+#         axis.title=element_text(size=18),
+#         strip.background=element_rect(fill="white", colour="black"),
+#         strip.text.x=element_text(size=18, color="black"), 
+#         panel.grid.major = element_blank(), 
+#         panel.grid.minor = element_blank(), 
+#         panel.border = element_blank())
+# print(histplotV)
 
 # Calculation of the variance in fitted values
 VarF <- var(as.vector(fixef(m2) %*% t(m2@pp$X)))
@@ -161,16 +162,13 @@ VarF <- var(as.vector(fixef(m2) %*% t(m2@pp$X)))
 # R2GLMM - conditional R2GLMM for full model
 Table3$R2[Table3$variable==v]<-(VarF + VarCorr(m2)$trip_id[1])/(VarF + VarCorr(m2)$trip_id[1] + pi^2/3)
 
-
 }
-dev.off()
+#dev.off()
 
 
 ### FORMAT TABLE 3 FOR MANUSCRIPT ###
 head(Table3)
-
 Table3<-Table3 %>% arrange(variable, Colony, behav)
-
 #fwrite(Table3,"Table3.csv")
 
 
@@ -179,13 +177,18 @@ Table3<-Table3 %>% arrange(variable, Colony, behav)
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # Question 2:  Do environmental conditions differ between foraging locations and general background?
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## this is a multivariate analysis that attempts to distinguish between general environment and foraging locations
+## using a RandomForest algorithm
+## preliminary steps include data subsetting, and assessment of correlation
+## model is fitted for each study area separately, and evaluated for performance and residual autocorrelation
 
 head(RBTB_ENV)
 head(BGRD_ENV)
 dim(BGRD_ENV)
-dim(BGRD_ENV[is.na(BGRD_ENV$tmp.vec.long),])
-
+dim(BGRD_ENV[is.na(BGRD_ENV$tmp.vec.long),]) ### no data available for 1/3 of the background points
 BGRD_ENV$state_EMBC<-"background"
+
+
 
 ### FORMAT THE DATA FOR MODELLING INPUT ###
 
@@ -197,15 +200,11 @@ bgrd<- BGRD_ENV %>% dplyr::select(state_EMBC,lat, long, loc, month, Var, tmp.vec
 bgrd<- bgrd[complete.cases(bgrd),]
 dim(bgrd)
 head(bgrd)
-plot(lat~long, bgrd)
-
-### SAMPLE RANDOM BACKGROUND LOCATIONS TO SELECT ONLY 3-times AS MANY AS FORAGING LOCATIONS
-## no longer necessary as complete cases are only 2870...
-#q2df<-rbind(q2df, BGRD_ENV[sample(1:dim(BGRD_ENV)[1],size=dim(q2df)[1]*3),])
+#plot(lat~long, bgrd)
 
 
 
-### NEED TO COMBINE THE TWO DATA FRAMES ###
+### COMBINE BACKGROUND AND TRACKING DATA FRAMES ###
 
 q2df<-RBTB_ENV %>% filter(state_EMBC=="ext_search") %>%   ### changed on 24 July 2018 to adjust for new data provided by Laura
   gather(key="Var", value="tmp.vec.long", -ID_GPS_deployment, -loc, -DateTime, -Longitude, -Latitude, -Sexe, -Breeding_statut, -state_EMBC, -month) %>%
@@ -215,18 +214,13 @@ q2df<-RBTB_ENV %>% filter(state_EMBC=="ext_search") %>%   ### changed on 24 July
   mutate(month=as.factor(month)) %>%
   mutate(speed=sqrt(Wind_U^2+Wind_V^2)) 
 names(q2df)<-names(bgrd)
-dim(q2df)
 #q2df<- q2df[complete.cases(q2df),]         ### this eliminates ~500 locations from St Helena, so we use rfImpute instead
 dim(q2df)
-
-head(q2df)
 q2df<-rbind(q2df,bgrd)
 head(q2df)
 dim(q2df)
 
-plot(lat~long, q2df, col=as.numeric(state_EMBC))
-
-
+#plot(lat~long, q2df, col=as.numeric(state_EMBC))
 
 
 
@@ -234,16 +228,16 @@ plot(lat~long, q2df, col=as.numeric(state_EMBC))
 # FITTING RANDOM FOREST MODELS FOR EACH STUDY AREA
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-##### SUBSET DATA FOR ST HELENA ##############
-
+## SUBSET DATA FOR ST HELENA ###
 StHel<-q2df %>% filter(loc=="StHelena")
 names(StHel)
 StHel$state_EMBC<-droplevels(StHel$state_EMBC)
 table(StHel$state_EMBC) ## quick assessment how balanced the data are
 
+
 ## IMPUTE MISSING DATA FOR ST HELENA ###
-dim(StHel[complete.cases(StHel),])  ## we lose a lot of data, so we impute values rather than discard them
-StHel<-rfImpute(state_EMBC~lat+long+BATHY+botTemp+CHLA+COLONY+EKE+MixLayDep+NPP+Salin+SEAMOUNT+slope+SSH+SST+SSTnight+TUNA+speed+month, data=StHel, iter=10,ntree=1500, mtry=3)
+dim(StHel[complete.cases(StHel),])  ## we lose a lot of data if we exclude incomplete cases, so we impute values rather than discard them
+StHel<-rfImpute(state_EMBC~lat+long+BATHY+botTemp+CHLA+COLONY+EKE+MixLayDep+NPP+Salin+SEAMOUNT+slope+SSH+SST+SSTnight+TUNA+speed+month, data=StHel, iter=10,ntree=1500, mtry=3) ## this function uses a randomForest model to impute the missing values
 StHel$FORAGE<-ifelse(StHel$state_EMBC=="ext_search",1,0)  ## for numeric response/regressionn setting
 table(StHel$FORAGE)
 
@@ -257,8 +251,7 @@ as.data.frame(CORMAT) %>% mutate(Var1=row.names(CORMAT)) %>%
   filter(correlation<1)
 
 
-
-## FIT AND EVALUATE RANDOM FOREST MODEL IN CLASSIFICATION MODE
+## FIT AND EVALUATE RANDOM FOREST MODEL IN CLASSIFICATION MODE EXCLUDING THE HIGHLY CORRELATED VARIABLES
 RF_STH<-randomForest(state_EMBC~BATHY+botTemp+COLONY+EKE+MixLayDep+CHLA+Salin+SEAMOUNT+slope+SSH+SST+TUNA+speed+month, data=StHel, ntree=1500, mtry=6, importance=T)
 RF_STH
 varImpPlot(RF_STH)
@@ -353,14 +346,14 @@ MORANIres
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ##### TESTING WHETHER PREDICTIONS WORK ######
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+## this evaluation takes the data from Madelaine and applies the model from St Helena and assesses what proportion of foraging locations are correctly predicted
 
 VALDAT<- Sene %>% mutate(SHpred=predict(RF_STH,newdata=Sene)) %>%
   dplyr::select(state_EMBC,FORAGE,SHpred) %>%
   filter(!is.na(SHpred))
 1-(table(VALDAT$state_EMBC, VALDAT$SHpred)[1,1]/sum(table(VALDAT$state_EMBC, VALDAT$SHpred)[1,]))
-# roc.area(VALDAT$FORAGE, VALDAT$SHpred)
 
+## this evaluation takes the data from St Helena and applies the model from Madelaine and assesses what proportion of foraging locations are correctly predicted
 
 VALDAT<- StHel %>% mutate(SENpred=predict(RF_SEN,newdata=StHel)) %>%
   dplyr::select(state_EMBC,FORAGE,SENpred) %>%
@@ -368,8 +361,6 @@ VALDAT<- StHel %>% mutate(SENpred=predict(RF_SEN,newdata=StHel)) %>%
 
 table(VALDAT$state_EMBC, VALDAT$SENpred)
 1-(table(VALDAT$state_EMBC, VALDAT$SENpred)[1,1]/sum(table(VALDAT$state_EMBC, VALDAT$SENpred)[1,]))
-
-# roc.area(VALDAT$FORAGE, VALDAT$SENpred)
 
 
 
@@ -397,6 +388,7 @@ IMPsen$rel_imp<-round((IMPsen$IncMSE/IMPsen$IncMSE[1])*100,2)
 
 
 
+#### CREATE PLOT FOR VARIABLE IMPORTANCE
 
 pdf("RBTB_Variable_Importance_RF.pdf", width=9, height=13)
 par(mfrow=c(2,1),mar=c(5,6,2,1))
@@ -412,30 +404,19 @@ TABLE4<- merge(IMP,IMPsen,by="variable", all=T)
 
 
 
-# PLOT HISTOGRAM FOR ONE VARIABLE
-hist(StHel$speed[StHel$forage==1],100, col="red", main="", xlab="wind speed (m/s)", ylim=c(0,200))
-hist(StHel$speed[StHel$forage==0],100, main="", axes=F, add=T, ylim=c(0,200))
-
-
-
-
-
-
-
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
-##### PLOT VARIABLE RELATIONSHIPS  ##############
+##### PLOT VARIABLE RELATIONSHIPS OF RANDOM FOREST MODEL #############
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+## the function to create the plots was outsourced to another script
+## it creates hundreds of replicate datasets and varies only the variable of interest
 source("C:\\STEFFEN\\RSPB\\Statistics\\RF_partial_plot.r")
 
-## for 2 variables per colony ##
+
+## call the partialPlot function for 2 variables per colony ##
 
 SENOUT<-RF_partialPlot(data=Sene, RF=RF_SEN, variables=c("CHLA","COLONY"))
 STHOUT<-RF_partialPlot(data=StHel, RF=RF_STH, variables=c("TUNA","Salin"))
-
-
-#pdf("C:\\STEFFEN\\MANUSCRIPTS\\submitted\\RBTB_StHelena\\Fig6.pdf", width=13, height=13)
-
 
 
 ### COMBINE OUTPUT OF THE TWO IN ONE PLOT ###
@@ -451,13 +432,16 @@ plotdat$VARIABLE<-ifelse(plotdat$VARIABLE=="CHLA","chlorophyll a conc.",plotdat$
 plotdat$VARIABLE<-ifelse(plotdat$VARIABLE=="Salin","salinity",plotdat$VARIABLE)
 
 
+
+## CREATE PLOT FOR ALL VARIABLES FROM BOTH COLONIES
 out<- plotdat %>% mutate(pred.num=ifelse(pred=="ext_search",1,0)) %>%
   group_by(VARIABLE, VALUE,Col) %>%
   summarise(mean=mean(pred.num, na.rm=T), sd=sd(pred.num, na.rm=T)) %>%
   mutate(ucl=mean+0.5*sd, lcl=mean-0.5*sd)
 
 
-## CREATE PLOT FOR ALL VARIABLES
+
+#pdf("C:\\STEFFEN\\MANUSCRIPTS\\submitted\\RBTB_StHelena\\FigS2.pdf", width=13, height=13)
 
 ggplot(out) + geom_line(aes(x=VALUE, y=mean), linetype=1)+
   geom_line(aes(x=VALUE, y=lcl), linetype=2)+
@@ -474,7 +458,7 @@ ggplot(out) + geom_line(aes(x=VALUE, y=mean), linetype=1)+
         axis.title=element_text(size=18), 
         strip.text.x=element_text(size=18, color="black"),
         strip.text.y=element_text(size=18, color="black"),
-        axis.title.y=element_text(margin=margin(0,20,0,0)), 
+        #axis.title.y=element_text(margin=margin(0,20,0,0)), 
         strip.background=element_rect(fill="white", colour="black"))
 
 
@@ -545,43 +529,8 @@ ggplot()+geom_rect(data=StHel[StHel$state_EMBC =="background",], aes(xmin=long-0
 
 
 
-############ ASSESS RESIDUAL SPATIAL AUTOCORRELATION ########
-
-
-
-#########################  TEST FOR AUTOCORRELATION USING MORAN's I AND GEARY's C##########################
-################ taken from http://www.ats.ucla.edu/stat/r/faq/morans_i.htm   ################
-
-MoranI<-data.frame(season=c(1:13))
-MoranI$statistic<-0
-MoranI$p<-0
-for (i in 1:13){								### loop to calculate Morans I for each season separately
-  b<-subset(TRAIN, Period==i)
-  b<-subset(b, COUNT>0)
-  SPECIES.coords <- as.matrix(cbind(b$LONG, b$LAT))
-  SPECIES.dists<-knn2nb(knearneigh(SPECIES.coords, k= 50, longlat=TRUE))		### adjust k= to the number of nearest neighbours
-  coord.list <-make.sym.nb(SPECIES.dists) 
-  coord.list <- nb2listw(coord.list,glist=NULL,style="W",zero.policy=FALSE) 
-  out<-moran.test(b$COUNT, coord.list, randomisation=TRUE, zero.policy=TRUE, na.action=na.omit, spChk=NULL, adjust.n=TRUE)
-  out2<-geary.test(b$BASH, coord.list, randomisation=TRUE, zero.policy=TRUE, spChk=NULL, adjust.n=TRUE)
-  MoranI[i,2]<-as.numeric(out$estimate[1])
-  MoranI[i,3]<-out$p
-  MoranI[i,4]<-as.numeric(out2$estimate[1])
-  MoranI[i,5]<-out2$p
-}
-MoranI
-write.table(MoranI, "Spatial_autocorrelation.csv", sep=",", row.names=F)
-
-
-
-
-
-
 
 ######################################## NOT CHANGED DURING REVISION #############################################
-
-
-
 
 
 
