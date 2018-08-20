@@ -6,11 +6,7 @@
 ## analysis written by steffen.oppel@rspb.org.uk on 9 Jan 2017
 
 ## Manuscript: Foraging ecology of tropicbirds breeding in two contrasting marine environments
-<<<<<<< HEAD:RBTB_EnvDat_comparison_v2.r
 ## Ngoné Diop, Laura Zango, Annalea Beard, Cheikh Tidiane Ba, Papa Ibnou Ndiaye, Leeann Henry, Elizabeth Clingham, Steffen Oppel, Jacob González-Solís
-=======
-## NgonÃ© Diop, Laura Zango, Annalea Beard, Cheikh Tidiane Ba, Papa Ibnou Ndiaye, Leeann Henry, Elizabeth Clingham, Steffen Oppel, Jacob GonzÃ¡lez-SolÃ­s
->>>>>>> 226c888cfa05dd8d3510f0bcc8091c76c57162b0:RBTB_environmental_models_MEPS_manuscript.r
 
 ## REVISION TO INCLUDE MORE ENVIRONMENTAL VARIABLES STARTED ON 9 JULY 2018
 ## revision finalised on 17 Aug 2018
@@ -534,6 +530,69 @@ ggplot()+geom_rect(data=StHel[StHel$state_EMBC =="background",], aes(xmin=long-0
 
 
 
+
+
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# FIG S1: PLOT SST FOR ALL AFRICAN TRACKS BY MONTH
+#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## revised on 20 Aug 2018 to meet reviewer comments
+## re-ordered months to fit temporal sequence
+
+
+### PREPARE THE DATA TO BE PLOTTED
+head(BGRD_ENV)
+plotdf<-BGRD_ENV %>%
+  #filter(Colony=="Madelaine") %>%
+  filter(Var=="SST") %>%
+  filter(!is.na(tmp.vec.long)) %>%
+  mutate(col_long=colony$long[match(loc,colony$loc)],col_lat=colony$lat[match(loc,colony$loc)]) %>%
+  #mutate(Month=format(DateTime, format="%b"))
+  mutate(Month=factor(month, levels = c("Sep","Oct","Dec","Jan","Feb","Mar"))) %>%
+  mutate(Colony=ifelse(loc=="Senegal","Madelaine","St Helena"))
+
+### check the range of SST values ###
+range(plotdf$tmp.vec.long)
+
+### download a background map ###
+africa <- map_data("world") %>% filter(region %in% c("Senegal", "Mauritania","Gambia","Guinea-Bissau"))
+
+
+
+### PRODUCE THE PLOT ###
+#pdf("C:\\STEFFEN\\MANUSCRIPTS\\submitted\\RBTB_StHelena\\FigS1.pdf", width=13, height=10)
+
+ggplot(plotdf)+geom_rect(aes(xmin=long-0.2,ymin=lat-0.2,xmax=long+0.2,ymax=lat+0.2, fill = tmp.vec.long)) +
+  facet_wrap(~Colony+Month, ncol=3, scales = "free")+
+  scale_colour_gradient(name = 'SST (C)', low="white", high="red", guide = "colourbar", limits=c(16, 28))+ ### for reasons I cannot understand this line is ignored completely
+  guides(fill=guide_legend(title="SST (C)"))+
+  #geom_polygon(data = africa, aes(x = long, y = lat, group = group)) +     ### does not work as it plots the entire map
+  geom_map(data = africa, mapping=aes(map_id = as.factor(region)), map=africa[,c(5,1,2)]) + 
+  geom_point(aes(x=col_long,y=col_lat),size=3)+
+  
+  xlab("Longitude") +
+  ylab("Latitude") +
+  
+  theme(panel.background=element_rect(fill="white", colour="black"), 
+        axis.text=element_text(size=14, color="black"),
+        legend.text=element_text(size=14, color="black"),
+        legend.title=element_text(size=18, color="black"),  
+        axis.title=element_text(size=18), 
+        strip.text.x=element_text(size=18, color="black"), 
+        strip.background=element_rect(fill="white", colour="black"), 
+        panel.grid.major = element_blank(), 
+        panel.grid.minor = element_blank(), 
+        panel.border = element_blank())
+
+
+dev.off()
+
+
+
+
+
+
+
+
 ######################################## NOT CHANGED DURING REVISION #############################################
 
 
@@ -584,50 +643,13 @@ ddply(q3df,c("breeding_status","Behaviour"), summarise,mean=mean(value, na.rm=T)
 
 
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# PLOT SST FOR ALL AFRICAN TRACKS BY MONTH
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-head(STATS_INPUT)
-
-plotdf<-STATS_INPUT %>%
-	filter(Colony=="Madelaine") %>%
-	filter(variable=="SST") %>%
-	mutate(Month=format(DateTime, format="%b"))
-
-range(plotdf$value)
-
-africa <- map_data("world")
-
-ggplot(plotdf, aes(x=Longitude,y=Latitude, colour=value)) +   facet_wrap(~Month, ncol=3)+
-	geom_point(pch=16, size=2)+
-
-    	xlab("Longitude") +
-    	ylab("Latitude") +
-
-	scale_colour_gradient(name = 'SST (C)', low="white", high="red", guide = "colourbar", limits=c(19.75, 28))+
-
-  theme(panel.background=element_rect(fill="white", colour="black"), 
-        axis.text=element_text(size=14, color="black"),
-        legend.text=element_text(size=14, color="black"),
-        legend.title=element_text(size=18, color="black"),  
-        axis.title=element_text(size=18), 
-        strip.text.x=element_text(size=18, color="black"), 
-        strip.background=element_rect(fill="white", colour="black"), 
-        panel.grid.major = element_blank(), 
-        panel.grid.minor = element_blank(), 
-        panel.border = element_blank())
-
-
-
-
 
 
 
 
 
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-# PLOT BACKGROUND 
+# PLOT BACKGROUND FOR PRELIMINARY EXPLORATIONS -- NOT RETAINED IN MS
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 head(q2df)
